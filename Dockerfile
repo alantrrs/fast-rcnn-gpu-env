@@ -101,7 +101,7 @@ RUN cd /opt && \
     rm Anaconda-2.2.0-Linux-x86_64.sh && \
     /opt/conda/bin/conda install --yes conda==3.10.1 && \
     cd /opt/fast-rcnn/caffe-fast-rcnn/python && \
-    conda install --yes cython
-    conda install --yes opencv
-    echo 'easydict' >> requirement.txt
+    conda install --yes cython && \
+    conda install --yes opencv && \
+    echo 'easydict' >> requirement.txt && \
     pip install -r requirements.txt
