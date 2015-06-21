@@ -1,7 +1,7 @@
 FROM karfai/ubuntu-cuda
 MAINTAINER Siew Kar Fai <karfai0317@gmail.com>
 
-ADD /libpng-1.5.15/ /opt/dump/libpng-1.5.15/
+ADD tools/ /temp
 
 ENV PYTHONPATH=/opt/fast-rcnn/caffe-fast-rcnn/python:$PYTHONPATH \
     PATH=/opt/fast-rcnn/caffe-fast-rcnn/.build_release/tools:/usr/local/MATLAB/R2014b/bin:/opt/conda/bin:$PATH \
@@ -112,7 +112,7 @@ RUN cd /opt && \
     rm /opt/conda/lib/libreadline* && \
     ldconfig && \
     \
-    cd /opt/dump/libpng-1.5.15 && \
+    cd /tmp/libpng-1.5.15 && \
     ./configure --prefix=/opt/libpng-1.5.15 && \
     make check -j$(nproc) && \
     make install -j$(nproc) && \
