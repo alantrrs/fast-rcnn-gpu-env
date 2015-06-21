@@ -1,8 +1,11 @@
 FROM karfai/ubuntu-cuda
 MAINTAINER Siew Kar Fai <karfai0317@gmail.com>
 
+ADD tools/libpng-1.5.15/ /opt/dump/libpng-1.5.15
+
 ENV PYTHONPATH=/opt/fast-rcnn/caffe-fast-rcnn/python:$PYTHONPATH \
-    PATH=/opt/fast-rcnn/caffe-fast-rcnn/.build_release/tools:/usr/local/MATLAB/R2014b/bin:/opt/conda/bin:$PATH
+    PATH=/opt/fast-rcnn/caffe-fast-rcnn/.build_release/tools:/usr/local/MATLAB/R2014b/bin:/opt/conda/bin:$PATH \
+    LD_LIBRARY_PATH=/opt/conda/lib:/opt/libpng-1.5.15/lib:$LD_LIBRARY_PATH
 
 # Get dependencies
 RUN apt-get update && apt-get install -y \
@@ -103,5 +106,16 @@ RUN cd /opt && \
     cd /opt/fast-rcnn/caffe-fast-rcnn/python && \
     conda install --yes cython && \
     conda install --yes opencv && \
-    echo 'easydict' >> requirement.txt && \
-    pip install -r requirements.txt
+    conda install --yes --channel https://conda.binstar.org/auto easydict && \
+    pip install -r requirements.txt && \
+    \
+    rm /opt/conda/lib/libreadline* && \
+    ldconfig && \
+    \
+    cd /opt/dump/libpng-1.5.15 && \
+    ./configure --prefix=/opt/libpng-1.5.15 && \
+    make check -j$(nproc) && \
+    make install -j$(nproc) && \
+    make check -j$(nproc) && \
+    cd /opt && \
+    rm -rf dump
