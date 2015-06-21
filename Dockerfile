@@ -1,7 +1,7 @@
 FROM karfai/ubuntu-cuda
 MAINTAINER Siew Kar Fai <karfai0317@gmail.com>
 
-ADD /libpng-1.5.15/ /opt/dump/libpng-1.5.15
+ADD /libpng-1.5.15/ /opt/dump/libpng-1.5.15/
 
 ENV PYTHONPATH=/opt/fast-rcnn/caffe-fast-rcnn/python:$PYTHONPATH \
     PATH=/opt/fast-rcnn/caffe-fast-rcnn/.build_release/tools:/usr/local/MATLAB/R2014b/bin:/opt/conda/bin:$PATH \
