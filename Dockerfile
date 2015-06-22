@@ -88,6 +88,7 @@ RUN cd /opt && \
     git clone https://github.com/sergeyk/selective_search_ijcv_with_python.git && \
     cd caffe && \
     sed -i 's/predictions = out\[self.outputs\[0\]\].squeeze(axis=(2, 3))/predictions = out\[self.outputs\[0\]\].squeeze()/' detector.py && \
+    sed -i 's/predictions = out\[self.outputs\[0\]\].squeeze(axis=(2,3))/predictions = out\[self.outputs\[0\]\].squeeze()/' detector.py && \
     \
     cd /etc/ld.so.conf.d && \
     echo "/opt/fast-rcnn/caffe-fast-rcnn/.build_release/lib" > caffe-ld-so.conf && \
