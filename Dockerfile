@@ -1,4 +1,4 @@
-FROM karfai/ubuntu-cuda
+FROM kaixhin/cuda
 MAINTAINER Siew Kar Fai <karfai0317@gmail.com>
 
 ADD tools/ /tmp
