@@ -4,7 +4,7 @@ MAINTAINER Siew Kar Fai <karfai0317@gmail.com>
 ADD tools/ /tmp
 
 ENV PYTHONPATH=/opt/fast-rcnn/caffe-fast-rcnn/python:$PYTHONPATH \
-    PATH=/opt/fast-rcnn/caffe-fast-rcnn/.build_release/tools:/usr/local/MATLAB/R2014b/bin:/opt/conda/bin:$PATH \
+    PATH=/opt/conda/bin:$PATH \
     LD_LIBRARY_PATH=/opt/conda/lib:/opt/libpng-1.5.15/lib:$LD_LIBRARY_PATH
 
 # Get dependencies
@@ -67,56 +67,49 @@ RUN cd /opt && \
     cd ../.. && \
     rm master.zip
 
-# Setup the Caffe, add caffe-ld-so.conf and create some symlinks
-RUN cd /opt && \
-    git clone --recursive https://github.com/rbgirshick/fast-rcnn.git && \
+# Install python dependencies
+WORKDIR /opt
+RUN wget https://repo.continuum.io/archive/Anaconda-2.2.0-Linux-x86_64.sh 
+RUN bash Anaconda-2.2.0-Linux-x86_64.sh -b -p /opt/conda && \
+    rm Anaconda-2.2.0-Linux-x86_64.sh && \
+    /opt/conda/bin/conda install --yes conda==3.10.1 && \
+    conda install --yes cython && \
+    conda install --yes opencv && \
+    conda install --yes --channel https://conda.binstar.org/auto easydict 
+
+# To remove erro when loading libreadline from anaconda
+RUN rm /opt/conda/lib/libreadline* && \
+    ldconfig 
+
+WORKDIR /tmp/libpng-1.5.15
+RUN ./configure --prefix=/opt/libpng-1.5.15 && \
+    make check -j$(nproc) && \
+    make install -j$(nproc) && \
+    make check -j$(nproc)
+
+# Setup the fast-rcnn
+WORKDIR /opt
+RUN git clone --recursive https://github.com/rbgirshick/fast-rcnn.git && \
     cd fast-rcnn/caffe-fast-rcnn && \
     cp Makefile.config.example Makefile.config && \
     \
     echo "CXX := /usr/bin/g++-4.6" >> Makefile.config && \
-    echo "MATLAB_DIR := /usr/local/MATLAB/R2014b" >> Makefile.config && \
-    echo "USE_CUDNN := 1" >> Makefile.config && \
     echo "ANACONDA_HOME := /opt/conda" >> /opt/fast-rcnn/caffe-fast-rcnn/Makefile.config && \
     echo 'PYTHON_INCLUDE := $(ANACONDA_HOME)/include $(ANACONDA_HOME)/include/python2.7 $(ANACONDA_HOME)/lib/python2.7/site-packages/numpy/core/include' >> /opt/fast-rcnn/caffe-fast-rcnn/Makefile.config && \
     echo 'PYTHON_LIB := $(ANACONDA_HOME)/lib' >> /opt/fast-rcnn/caffe-fast-rcnn/Makefile.config && \
     echo 'INCLUDE_DIRS := $(PYTHON_INCLUDE) /usr/local/include' >> /opt/fast-rcnn/caffe-fast-rcnn/Makefile.config && \
     echo 'LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib' >> /opt/fast-rcnn/caffe-fast-rcnn/Makefile.config && \
     echo 'WITH_PYTHON_LAYER := 1' >> /opt/fast-rcnn/caffe-fast-rcnn/Makefile.config && \
-    sed -i 's/CXX :=/CXX ?=/' Makefile && \
-    \
-    cd python && \
-    git clone https://github.com/sergeyk/selective_search_ijcv_with_python.git && \
-    cd caffe && \
-    sed -i 's/predictions = out\[self.outputs\[0\]\].squeeze(axis=(2, 3))/predictions = out\[self.outputs\[0\]\].squeeze()/' detector.py && \
-    sed -i 's/predictions = out\[self.outputs\[0\]\].squeeze(axis=(2,3))/predictions = out\[self.outputs\[0\]\].squeeze()/' detector.py && \
-    \
-    cd /etc/ld.so.conf.d && \
-    echo "/opt/fast-rcnn/caffe-fast-rcnn/.build_release/lib" > caffe-ld-so.conf && \
-    \
-    cd /usr/lib/x86_64-linux-gnu && \
-    ln -s libhdf5.so.7 libhdf5.so.9 && \
-    ln -s libhdf5_hl.so.7 libhdf5_hl.so.9 && \
-    ldconfig
+    sed -i 's/CXX :=/CXX ?=/' Makefile 
 
-# Install python dependencies
-RUN cd /opt && \
-    wget --quiet https://repo.continuum.io/archive/Anaconda-2.2.0-Linux-x86_64.sh && \
-    bash Anaconda-2.2.0-Linux-x86_64.sh -b -p /opt/conda && \
-    rm Anaconda-2.2.0-Linux-x86_64.sh && \
-    /opt/conda/bin/conda install --yes conda==3.10.1 && \
-    cd /opt/fast-rcnn/caffe-fast-rcnn/python && \
-    conda install --yes cython && \
-    conda install --yes opencv && \
-    conda install --yes --channel https://conda.binstar.org/auto easydict && \
-    pip install -r requirements.txt && \
-    \
-    rm /opt/conda/lib/libreadline* && \
-    ldconfig && \
-    \
-    cd /tmp/libpng-1.5.15 && \
-    ./configure --prefix=/opt/libpng-1.5.15 && \
-    make check -j$(nproc) && \
-    make install -j$(nproc) && \
-    make check -j$(nproc) && \
-    cd /opt && \
-    rm -rf dump
+WORKDIR /opt/fast-rcnn/caffe-fast-rcnn/python 
+RUN pip install -r requirements.txt
+
+WORKDIR /opt/fast-rcnn/lib
+RUN make
+
+WORKDIR /opt/fast-rcnn/caffe-fast-rcnn
+RUN make -j8  && make pycaffe
+
+WORKDIR /opt/fast-rcnn
+CMD ["bash"]
