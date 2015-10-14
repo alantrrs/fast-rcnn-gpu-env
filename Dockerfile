@@ -111,5 +111,8 @@ RUN make
 WORKDIR /opt/fast-rcnn/caffe-fast-rcnn
 RUN make -j8  && make pycaffe
 
+# Extras
+RUN sudo apt-get install -y vim
+
 WORKDIR /opt/fast-rcnn
 CMD ["bash"]
