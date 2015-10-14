@@ -111,6 +111,18 @@ RUN make
 WORKDIR /opt/fast-rcnn/caffe-fast-rcnn
 RUN make -j8  && make pycaffe
 
+# FOR X11 socket share 
+# (http://fabiorehm.com/blog/2014/09/11/running-gui-apps-with-docker/)
+RUN export uid=1000 gid=1000 && \
+    mkdir -p /home/developer && \
+    echo "developer:x:${uid}:${gid}:Developer,,,:/home/developer:/bin/bash" >> /etc/passwd && \
+    echo "developer:x:${uid}:" >> /etc/group && \
+    echo "developer ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/developer && \
+    chmod 0440 /etc/sudoers.d/developer && \
+    chown ${uid}:${gid} -R /home/developer
+
+USER developer
+
 # Extras
 RUN sudo apt-get install -y vim
 
