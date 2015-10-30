@@ -89,8 +89,10 @@ RUN ./configure --prefix=/opt/libpng-1.5.15 && \
 
 # Setup the fast-rcnn
 WORKDIR /opt
-RUN git clone --recursive https://github.com/rbgirshick/fast-rcnn.git && \
-    cd fast-rcnn/caffe-fast-rcnn && \
+RUN git clone --recursive https://github.com/senthilps8/fast-rcnn.git 
+WORKDIR /opt/fast-rcnn
+RUN git checkout python_eval
+RUN cd caffe-fast-rcnn && \
     cp Makefile.config.example Makefile.config && \
     \
     echo "CXX := /usr/bin/g++-4.6" >> Makefile.config && \
@@ -110,18 +112,6 @@ RUN make
 
 WORKDIR /opt/fast-rcnn/caffe-fast-rcnn
 RUN make -j8  && make pycaffe
-
-# FOR X11 socket share 
-# (http://fabiorehm.com/blog/2014/09/11/running-gui-apps-with-docker/)
-RUN export uid=1000 gid=1000 && \
-    mkdir -p /home/developer && \
-    echo "developer:x:${uid}:${gid}:Developer,,,:/home/developer:/bin/bash" >> /etc/passwd && \
-    echo "developer:x:${uid}:" >> /etc/group && \
-    echo "developer ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/developer && \
-    chmod 0440 /etc/sudoers.d/developer && \
-    chown ${uid}:${gid} -R /home/developer
-
-USER developer
 
 # Extras
 RUN sudo apt-get install -y vim
